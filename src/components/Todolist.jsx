@@ -1,20 +1,22 @@
 import { useState } from "react";
 import TodoItem from "./todoitem";
-import { PlusIcon, TrashIcon, FloppyDiskBackIcon } from "@phosphor-icons/react";
+import TodoStats from "./Todostats";
+import FilterButtons from "./Filterbuttons";
+import AddTaskForm from "./AddTaskForm";
+import EmptyState from "./EmptyState";
+import { PlusIcon } from "@phosphor-icons/react";
+
 
 function TodoList({ tasks: initialTasks }) {
     const [tasks, setTasks] = useState(initialTasks);
     const [isAdding, setIsAdding] = useState(false);
     const [newTaskText, setNewTaskText] = useState('');
+    const [filter, setFilter] = useState('all');
+    const [editingTaskId, setEditingTaskId] = useState(null);
 
-    function handleClick(e) {
-        console.log("clicked", e.target);
-        setIsAdding(true);
-    }
 
     function handleSave() {
         if (newTaskText.trim() === '') return;
-
 
         const newTask = {
             id: Date.now(),
@@ -39,39 +41,55 @@ function TodoList({ tasks: initialTasks }) {
         setTasks(tasks.map((task) =>
             task.id === id? {...task, status: task.status === 'done'? 'pending' : 'done'} : task));
     }
-    return (
+
+    function handleUpdate(id, newText) {
+        setTasks(tasks.map((task) =>
+            task.id === id ? {...task, text: newText } : task
+        ));
+        setEditingTaskId(null);
+    }
+
+    const filteredTasks =
+        filter === 'all'
+        ? tasks
+        : tasks.filter((task) => task.status === filter);
+
+        return (
         <>
+        <div className="lg:flex lg:justify-between items-end">
+            {/* Filter Buttons */}
+            <FilterButtons filter={filter} setFilter={setFilter}/>
+            {/* Task Stats */}
+            <TodoStats tasks={tasks} />
+        </div>
+
         <ul>
-            {tasks.map((task) => < TodoItem key={task.id} task={task} onDelete={handleDelete} onToggleComplete={toggleComplete}/>)}
-
+            {filteredTasks.length === 0 && !isAdding && <EmptyState />}
+            {filteredTasks.map((task) => (
+                <TodoItem
+                    key={task.id}
+                    task={task}
+                    onDelete={handleDelete}
+                    onToggleComplete={toggleComplete}
+                    onUpdate={handleUpdate}
+                    editingTaskId={editingTaskId}
+                    setEditingTaskId={setEditingTaskId}
+                />
+            ))}
             {isAdding && (
-                <li className="bg-gray-200 py-2 px-3 rounded-md my-3 flex items-center">
-                    <span className="inline-block w-[12px] h-[12px] rounded-full mr-2 bg-gray-400"></span>
-                    <input
-                    type="text"
-                    value={newTaskText}
-                    onChange={(e) => setNewTaskText(e.target.value)}
-                    className="bg-white px-2 border border-stone-900 w-full"
-                    placeholder="Enter a new task..."
-                     />
-                     <div className="flex gap-2 ml-auto">
-
-
-                        {/* save button */}
-                        <button className="flex items-center gap-3" onClick={handleSave}>
-                    <FloppyDiskBackIcon size={24} />
-                        </button>
-                        {/* delete button */}
-                        <button className="flex items-center gap-3" onClick={handleCancel}>
-                    <TrashIcon size={24} />
-                        </button>
-                     </div>
-                </li>)}
+                <AddTaskForm
+                    newTaskText={newTaskText}
+                    setNewTaskText={setNewTaskText}
+                    onSave={handleSave}
+                    onCancel={handleCancel}
+                /> )}
         </ul>
+
         <button
-            onClick={handleClick}
+            onClick={() => setIsAdding(true)}
             className="bg-cyan-900 px-3 py-1 p-2 cursor-pointer rounded-md text-white flex justify-center items-center gap-2 hover:bg-cyan-800 mx-auto"
-        ><PlusIcon size={24} />Add a Task
+        >
+            <PlusIcon size={24} />Add a Task
 
         </button>
         </>
