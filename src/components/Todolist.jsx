@@ -1,5 +1,5 @@
 import { useState } from "react";
-import TodoItem from "./todoitem";
+import TodoItem from "./TodoItem.jsx";
 import TodoStats from "./Todostats";
 import FilterButtons from "./Filterbuttons";
 import AddTaskForm from "./AddTaskForm";
